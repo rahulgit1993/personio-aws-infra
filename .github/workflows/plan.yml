@@ -81,14 +81,18 @@ jobs:
       id: tfplan
       run: |
         cd terraform  # Change to the directory containing your .tf files
-        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
-        cat plan.txt  # This ensures plan.txt is created and readable
+        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
+        ls -l terraform
+        cat terraform/tfplan  # This ensures plan.txt is created and readable
 
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
       with:
         name: tfplan
         path: terraform/tfplan  # Path to the terraform plan file
+
+    - name: List uploaded artifacts
+      run: echo "Uploaded artifact: tfplan"
     
 #    - name: List Uploaded files
 #      run: ls -l ./terraform

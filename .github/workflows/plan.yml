@@ -81,9 +81,14 @@ jobs:
         terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
 
     - name: Terraform Plan
+      id: tfplan
       run: |
         cd terraform  # Change to the directory containing your .tf files
-        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
+        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
+
+    - name: Read Terraform Plan Output
+      id: read_plan
+      run: echo "content<<EOF" >> $GITHUB_OUTPUT && cat plan.txt >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
@@ -99,5 +104,6 @@ jobs:
         body: |
           **Terraform Plan Output**
           ```
-          ${{ steps.tfplan.outputs.stdout }}
+          ${{ steps.read_plan.outputs.content }}
           ```
+

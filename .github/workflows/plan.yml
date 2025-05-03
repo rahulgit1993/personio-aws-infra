@@ -99,12 +99,12 @@ jobs:
         echo "content<<EOF" >> $GITHUB_ENV
         cat terraform/plan.txt >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
-    # Step to download the artifact (tfplan) uploaded in plan.yml
-    - name: Download Terraform Plan Artifact
-      uses: actions/download-artifact@v4
-      with:
-       name: terraform-plan  # Name of the artifact uploaded in plan.yml
-       path: ./terraform
+##    # Step to download the artifact (tfplan) uploaded in plan.yml
+#   - name: Download Terraform Plan Artifact
+#      uses: actions/download-artifact@v4
+#      with:
+#       name: terraform-plan  # Name of the artifact uploaded in plan.yml
+#       path: ./terraform
 
 #    - name: Comment Terraform Plan on GitHub PR
 #      uses: peter-evans/create-or-update-comment@v4

@@ -10,6 +10,7 @@ env:
   AWS_REGION: ap-south-1  # Mumbai region
   CLUSTER_NAME: sre-cluster
   TF_STATE_BUCKET: personio-aws-infra-statebucket  # Replace with your S3 bucket name
+  PLAIN_FILE_KEY: terraform/tfplan
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   IMAGE_NAME: sre-app
@@ -82,17 +83,21 @@ jobs:
       run: |
         cd terraform  # Change to the directory containing your .tf files
         terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
-        cat tfplan  # This ensures plan.txt is created and readable
 
-    - name: Upload Terraform Plan Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: tfplan
-        path: terraform/tfplan  # Path to the terraform plan file
+#    - name: Upload Terraform Plan Artifact
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: tfplan
+#        path: terraform/tfplan  # Path to the terraform plan file
 
-    - name: List uploaded artifacts
-      run: |
-        echo "Uploaded artifact: tfplan"
+    - name: Upload Terraform Plan to s3
+      run: | 
+        aws s3 cp tfplan s3://${{ env.TF_STATE_BUCKET }}/${{ env.PLAIN_FILE_KEY }}
+      
+
+ #   - name: List uploaded artifacts
+ #     run: |
+ #       echo "Uploaded artifact: tfplan"
     
 #    - name: List Uploaded files
 #      run: ls -l ./terraform

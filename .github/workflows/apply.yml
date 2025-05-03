@@ -13,6 +13,7 @@ env:
   AWS_REGION: ap-south-1  # Mumbai region
   CLUSTER_NAME: sre-cluster
   TF_STATE_BUCKET: personio-aws-infra-statebucket  # Replace with your S3 bucket name
+  PLAIN_FILE_KEY: terraform/tfplan
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   IMAGE_NAME: sre-app
@@ -38,20 +39,19 @@ jobs:
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.5.0  # Consistent version
+    
+    - name: Create terraform directory
+      run: mkdir -p terraform
+
+    - name: Download tfplan from s3
+      run: aws s3 cp s3://${{ env.TF_STATE_BUCKET }}/${{ env.PLAIN_FILE_KEY }} terraform/tfplan
 
     - name: Terraform Init
       run: |
         cd terraform
         terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
                        -backend-config="key=terraform/state/terraform.tfstate" \
-                       -backend-config="region=${{ env.AWS_REGION }}"
-
-    - name: Verify tfplan exist or not
-      run: |
-        pwd
-        cd terraform
-        ls -l
-        
+                       -backend-config="region=${{ env.AWS_REGION }}"        
 
 #    - name: Download tfplan artifact from plan.yml
 #      uses: actions/download-artifact@v4
@@ -59,10 +59,10 @@ jobs:
 #        name: tfplan  # Name of the artifact from plan.yml
 #        path: terraform  # Path where the plan artifact will be downloaded
 
-#    - name: Verify Artifact Exists
-#      run: |
-#        ls -l terraform
-#        cat terraform/tfplan
+    - name: Verify Artifact Exists
+      run: |
+        ls -l terraform
+        cat terraform/tfplan
 
 #    - name: Terraform Apply
 #      run: |

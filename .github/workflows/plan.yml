@@ -1,9 +1,13 @@
 name: Terraform Plan
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
+
 
 env:
   AWS_REGION: ap-south-1  # Mumbai region

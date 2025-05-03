@@ -92,7 +92,7 @@ jobs:
 
     - name: Upload Terraform Plan to s3
       run: | 
-        aws s3 cp tfplan s3://${{ env.TF_STATE_BUCKET }}/${{ env.PLAIN_FILE_KEY }}
+        aws s3 cp terraform/tfplan s3://${{ env.TF_STATE_BUCKET }}/${{ env.PLAIN_FILE_KEY }}
       
 
  #   - name: List uploaded artifacts

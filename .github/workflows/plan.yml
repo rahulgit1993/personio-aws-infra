@@ -35,7 +35,6 @@ jobs:
     - name: Set up Go Modules and Dependencies
       run: |
         cd app/src
-        
         # Check if go.mod exists, if not create it
         if [ ! -f "go.mod" ]; then
           echo "Initializing Go module..."
@@ -75,17 +74,22 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    # Ensure that Terraform is run in the correct directory
     - name: Initialize Terraform
-      run: terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
+      run: |
+        cd terraform  # Change to the directory containing your .tf files
+        terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
 
     - name: Terraform Plan
-      run: terraform plan -out=tfplan
+      run: |
+        cd terraform  # Change to the directory containing your .tf files
+        terraform plan -out=tfplan
 
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
       with:
         name: terraform-plan
-        path: tfplan
+        path: terraform/tfplan  # Path to the terraform plan file
 
     - name: Comment Terraform Plan on GitHub PR
       uses: peter-evans/create-or-update-comment@v4

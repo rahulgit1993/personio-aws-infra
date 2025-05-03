@@ -46,16 +46,26 @@ jobs:
                        -backend-config="key=terraform/state/terraform.tfstate" \
                        -backend-config="region=${{ env.AWS_REGION }}"
 
-    - name: Download tfplan artifact from plan.yml
-      uses: actions/download-artifact@v4
-      with:
-        name: tfplan  # Name of the artifact from plan.yml
-        path: terraform  # Path where the plan artifact will be downloaded
-
-    - name: Terraform Apply
+    - name: Verify tfplan exist or not
       run: |
-        cd terraform
-        terraform apply -auto-approve terraform/tfplan  # Apply the downloaded plan
+        ls -l tfplan
+        cat tfplan
 
-    - name: Terraform Apply Output
-      run: terraform output  # Output any relevant results from the Terraform apply
+#    - name: Download tfplan artifact from plan.yml
+#      uses: actions/download-artifact@v4
+#      with:
+#        name: tfplan  # Name of the artifact from plan.yml
+#        path: terraform  # Path where the plan artifact will be downloaded
+
+#    - name: Verify Artifact Exists
+#      run: |
+#        ls -l terraform
+#        cat terraform/tfplan
+
+#    - name: Terraform Apply
+#      run: |
+#        cd terraform
+#        terraform apply -auto-approve tfplan  # Apply the downloaded plan
+
+#    - name: Terraform Apply Output
+#      run: terraform output  # Output any relevant results from the Terraform apply

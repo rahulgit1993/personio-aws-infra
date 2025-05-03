@@ -48,8 +48,8 @@ jobs:
 
     - name: Verify tfplan exist or not
       run: |
-        ls -l terraform
-        cat terraform/tfplan
+        ls -l tfplan
+        cat tfplan
 
 #    - name: Download tfplan artifact from plan.yml
 #      uses: actions/download-artifact@v4
@@ -65,7 +65,7 @@ jobs:
 #    - name: Terraform Apply
 #      run: |
 #        cd terraform
-#        terraform apply -auto-approve terraform/tfplan  # Apply the downloaded plan
+#        terraform apply -auto-approve tfplan  # Apply the downloaded plan
 
 #    - name: Terraform Apply Output
 #      run: terraform output  # Output any relevant results from the Terraform apply

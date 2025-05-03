@@ -85,11 +85,11 @@ resource "kubernetes_namespace" "monitoring" {
 }
 
 resource "helm_release" "prom_stack" {
-  name       = "monitoring"
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  version    = "47.3.0"
+  name             = "monitoring"
+  namespace        = kubernetes_namespace.monitoring.metadata[0].name
+  repository       = "https://prometheus-community.github.io/helm-charts"
+  chart            = "kube-prometheus-stack"
+  version          = "47.3.0"
   create_namespace = false
 
   values = [<<EOF

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sre-app
+  template:
+    metadata:
+      labels:
+        app: sre-app
+    spec:
+      containers:
+      - name: sre-app
+        image: <DOCKER_USERNAME>/sre-app:latest
+        ports:
+        - containerPort: 8080

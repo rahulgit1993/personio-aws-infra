@@ -113,9 +113,9 @@ resource "aws_eks_node_group" "sre_nodes" {
   instance_types  = [var.node_instance_type]
 
   scaling_config {
-    desired_size = 2
-    max_size     = 2
-    min_size     = 2
+    desired_size = 3
+    max_size     = 3
+    min_size     = 3
   }
 }
 
@@ -131,7 +131,7 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-resource "helm_release" "prom_stack" {
+resource "helm_release" "prom_grafana_stack" {
   name             = "monitoring"
   namespace        = kubernetes_namespace.monitoring.metadata[0].name
   repository       = "https://prometheus-community.github.io/helm-charts"

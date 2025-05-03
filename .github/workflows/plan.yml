@@ -85,16 +85,20 @@ jobs:
       run: |
         cd terraform  # Change to the directory containing your .tf files
         terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
-
-    - name: Read Terraform Plan Output
-      id: read_plan
-      run: echo "content<<EOF" >> $GITHUB_OUTPUT && cat plan.txt >> $GITHUB_OUTPUT && echo "EOF" >> $GITHUB_OUTPUT
+        cat plan.txt  # This ensures plan.txt is created and readable
 
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
       with:
         name: terraform-plan
         path: terraform/tfplan  # Path to the terraform plan file
+
+    - name: Read Terraform Plan Output
+      id: read_plan
+      run: |
+        echo "content<<EOF" >> $GITHUB_ENV
+        cat plan.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Comment Terraform Plan on GitHub PR
       uses: peter-evans/create-or-update-comment@v4
@@ -104,6 +108,5 @@ jobs:
         body: |
           **Terraform Plan Output**
           ```
-          ${{ steps.read_plan.outputs.content }}
+          ${{ env.content }}
           ```
-

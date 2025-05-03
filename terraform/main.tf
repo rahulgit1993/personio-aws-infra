@@ -68,8 +68,8 @@ resource "null_resource" "update_aws_auth" {
   # Only run when config or files change
   triggers = {
    aws_auth_role_arn  = aws_iam_role.eks_node_role.arn
-   deployment_checksum = filesha256("${path.module}/k8s/deployment.yaml")
-   service_checksum = filesha256("${path.module}/k8s/service.yaml")
+   deployment_checksum = filesha256("${path.module}/../k8s/deployment.yaml")
+   service_checksum = filesha256("${path.module}/../k8s/service.yaml")
  }
 
   provisioner "local-exec" {
@@ -92,8 +92,8 @@ data:
         - system:nodes
 EOF
 #Applying our app manifests
-kubectl apply -f ./k8s/deployment.yaml
-kubectl apply -f ./k8s/service.yaml
+kubectl apply -f ../k8s/deployment.yaml
+kubectl apply -f ../k8s/service.yaml
  
 # Port forward to local machine for Grafana and Prometheus
 kubectl port-forward -n monitoring svc/monitoring-grafana 32000:80 &

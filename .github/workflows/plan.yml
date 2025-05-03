@@ -83,7 +83,7 @@ jobs:
     - name: Terraform Plan
       run: |
         cd terraform  # Change to the directory containing your .tf files
-        terraform plan -out=tfplan
+        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
 
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4

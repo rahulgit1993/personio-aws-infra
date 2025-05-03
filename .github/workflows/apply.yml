@@ -49,8 +49,9 @@ jobs:
     - name: Verify tfplan exist or not
       run: |
         pwd
-        ls -l 
-        cat terraform/tfplan
+        cd terraform
+        ls -l
+        
 
 #    - name: Download tfplan artifact from plan.yml
 #      uses: actions/download-artifact@v4

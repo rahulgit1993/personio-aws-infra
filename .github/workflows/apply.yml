@@ -57,14 +57,9 @@ jobs:
           cd terraform  # Change to the directory containing your .tf files
           terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
           cat plan.txt  # This ensures plan.txt is created and readable
+          
+      - name: Terraform Apply
+        run: terraform apply -auto-approve ./terraform/tfplan  # Applying the downloaded plan artifact
 
-      
-  #    - name: Initialize Terraform
-  #      run: |
-  #         cd terraform  # Change to the directory containing your .tf files
-  #         terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
-#      - name: Terraform Apply
-#        run: terraform apply -auto-approve ./terraform/tfplan  # Applying the downloaded plan artifact
-
-#      - name: Terraform Apply Output
-#        run: terraform output  # Output any relevant results from the Terraform apply
+      - name: Terraform Apply Output
+        run: terraform output  # Output any relevant results from the Terraform apply

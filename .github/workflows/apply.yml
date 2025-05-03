@@ -1,42 +1,58 @@
-#name: Terraform Apply
+name: Terraform Apply
 
-#on:
-#  workflow_run:
-#    workflows: ["Terraform Plan"]
-#    types:
-#      - completed
+on:
+  workflow_run:
+    workflows: ["Terraform Plan"]
+    types:
+      - completed
 
-#jobs:
-#  terraform_apply:
-#    runs-on: ubuntu-latest
+  push:
+    branches:
+      - main  # Trigger this workflow on pushes to the 'main' branch
 
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
+  # Allow manual trigger via GitHub UI (workflow_dispatch)
+  workflow_dispatch:
 
-#      - name: Set up AWS credentials
-#        uses: aws-actions/configure-aws-credentials@v2
-#        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#          aws-region: "ap-south-1"  # Mumbai region (Update if needed)
+jobs:
+  terraform_apply:
+    runs-on: ubuntu-latest
 
-#      - name: Set up Terraform
-#        uses: hashicorp/setup-terraform@v1
-#        with:
-#          terraform_version: 1.4.0  # Use the desired Terraform version
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-#      - name: Terraform Init
-#        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=ap-south-1"
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "ap-south-1"  # Mumbai region (Update if needed)
 
-#      - name: Download Terraform Plan Artifact
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: terraform-plan
-#          path: ./tfplan
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0  # Consistent version
 
-#      - name: Terraform Apply
-#        run: terraform apply -auto-approve ./tfplan
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=ap-south-1"
 
-#      - name: Terraform Apply Output
-#        run: terraform output
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan  # Name of the artifact uploaded in plan.yml
+          path: ./tfplan
+
+      # Ensure Apply Happens Only for Production (main branch)
+      - name: Ensure Apply Happens on Main Branch Only
+        if: github.ref == 'refs/heads/main'  # This ensures apply happens only on 'main'
+        run: |
+          echo "Terraform apply will run because we are on the main branch."
+
+      # Terraform Apply (only for main branch)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'  # Only applies if it's on the 'main' branch
+        run: terraform apply -auto-approve ./tfplan/terraform.tfplan  # Applying the plan artifact
+
+      - name: Terraform Apply Output
+        if: github.ref == 'refs/heads/main'  # Only outputs if it's on the 'main' branch
+        run: terraform output  # Output any relevant results from the Terraform apply

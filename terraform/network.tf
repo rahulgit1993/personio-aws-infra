@@ -1,8 +1,3 @@
-# provider.tf
-provider "aws" {
-  region = "ap-south-1"  # Mumbai region
-}
-
 # vpc/network.tf
 data "aws_availability_zones" "available" {}
 

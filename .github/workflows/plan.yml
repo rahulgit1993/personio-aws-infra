@@ -1,9 +1,13 @@
 name: Terraform Plan
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened]
 
 env:
   AWS_REGION: ap-south-1  # Mumbai region
@@ -22,6 +26,23 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    # Set up Go and install dependencies
+    - name: Set up Go 1.19
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.19'
+
+    - name: Set up Go Modules and Dependencies
+      run: |
+        cd app/src
+        # Check if go.mod exists, if not create it
+        if [ ! -f "go.mod" ]; then
+          echo "Initializing Go module..."
+          go mod init github.com/username/sre-app  # Replace with your project module name
+        fi
+        
+        go mod tidy  # Automatically download dependencies
+
     # Build Docker Image
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -34,12 +55,13 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+        docker build -t ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ./app
     
     - name: Push Docker image to DockerHub
       run: |
         docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
+    # Set up Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
@@ -52,24 +74,39 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    # Ensure that Terraform is run in the correct directory
     - name: Initialize Terraform
-      run: terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
+      run: |
+        cd terraform  # Change to the directory containing your .tf files
+        terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
 
     - name: Terraform Plan
-      run: terraform plan -out=tfplan
+      id: tfplan
+      run: |
+        cd terraform  # Change to the directory containing your .tf files
+        terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
+        cat plan.txt  # This ensures plan.txt is created and readable
 
     - name: Upload Terraform Plan Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: terraform-plan
-        path: tfplan
+        path: terraform/tfplan  # Path to the terraform plan file
 
-    - name: Comment Terraform Plan on GitHub PR
-      uses: peter-evans/comment-pr@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        body: |
-          **Terraform Plan:**
-          ```
-          $(terraform show -no-color tfplan)
-          ```
+    - name: Read Terraform Plan Output
+      id: read_plan
+      run: |
+        echo "content<<EOF" >> $GITHUB_ENV
+        cat terraform/plan.txt >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+#    - name: Comment Terraform Plan on GitHub PR
+#      uses: peter-evans/create-or-update-comment@v4
+#      with:
+#        token: ${{ secrets.GIT_TOKEN }}
+#        issue-number: ${{ github.event.pull_request.number }}
+#        body: |
+#          **Terraform Plan Output**
+#          ```
+#          ${{ env.content }}
+#          ```

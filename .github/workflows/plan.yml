@@ -90,10 +90,16 @@ jobs:
 #        name: tfplan
 #        path: terraform/tfplan  # Path to the terraform plan file
 
+
+    - name: Terraform Destroy Plan
+      run: |
+        cd terraform
+        terraform init
+        terraform plan -destroy -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
+
     - name: Upload Terraform Plan to s3
       run: | 
         aws s3 cp terraform/tfplan s3://${{ env.TF_STATE_BUCKET }}/${{ env.PLAIN_FILE_KEY }}
-      
 
  #   - name: List uploaded artifacts
  #     run: |

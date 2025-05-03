@@ -1,11 +1,6 @@
 name: Terraform Apply
 
 on:
-  workflow_run:
-    workflows: ["Terraform Plan"]
-    types:
-      - completed
-
   push:
     branches:
       - main  # Trigger this workflow on pushes to the 'main' branch
@@ -33,17 +28,17 @@ jobs:
         with:
           terraform_version: 1.5.0  # Consistent version
 
+      - name: List downloaded files
+        run: ls -l ./terraform
+
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=ap-south-1"
+        run: terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
 
       - name: Download Terraform Plan Artifact
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan  # Name of the artifact uploaded in plan.yml
           path: ./terraform
-
-      - name: List downloaded files
-        run: ls -l ./terraform
 
 #      - name: Terraform Apply
 #        run: terraform apply -auto-approve ./terraform/tfplan  # Applying the downloaded plan artifact

@@ -85,7 +85,7 @@ resource "null_resource" "update_aws_auth" {
             - system:bootstrappers
             - system:nodes
     EOF
-EOT
+    EOT
   }
 }
 

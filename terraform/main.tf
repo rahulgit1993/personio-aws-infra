@@ -1,17 +1,3 @@
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "public" {
-  count                   = 2
-  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
-  vpc_id                  = aws_vpc.main.id
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-}
-
 resource "aws_iam_role" "eks_cluster_role" {
   name = "eks-cluster-role"
   assume_role_policy = jsonencode({

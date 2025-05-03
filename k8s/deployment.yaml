@@ -2,8 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sre-app
+  namespace: application  # Assuming 'application' namespace for your app
 spec:
-  replicas: 1
+  replicas: 2  # Number of replicas (pods) for high availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1  # One extra pod can be created during the update
+      maxUnavailable: 0  # Ensures no pods are taken down during the update
   selector:
     matchLabels:
       app: sre-app
@@ -13,7 +19,7 @@ spec:
         app: sre-app
     spec:
       containers:
-      - name: sre-app
-        image: <DOCKER_USERNAME>/sre-app:latest
-        ports:
-        - containerPort: 8080
+        - name: sre-app
+          image: "${{ secrets.DOCKER_USERNAME }}/sre-app:${IMAGE_TAG}"  # Dynamic image tag
+          ports:
+            - containerPort: 8080

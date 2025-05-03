@@ -58,6 +58,37 @@ resource "aws_iam_role_policy_attachment" "cni_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
+resource "aws_iam_role_policy_attachment" "ecr_readonly" {
+  role       = aws_iam_role.eks_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "null_resource" "update_aws_auth" {
+  depends_on = [aws_eks_node_group.sre_nodes]
+
+  provisioner "local-exec" {
+    command = <<EOT
+    aws eks update-kubeconfig --region ${var.region} --name ${var.cluster_name}
+    kubectl get configmap aws-auth -n kube-system || true
+
+    cat <<EOF | kubectl apply -f -
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: aws-auth
+      namespace: kube-system
+    data:
+      mapRoles: |
+        - rolearn: ${aws_iam_role.eks_node_role.arn}
+          username: system:node:{{EC2PrivateDNSName}}
+          groups:
+            - system:bootstrappers
+            - system:nodes
+    EOF
+EOT
+  }
+}
+
 resource "aws_eks_node_group" "sre_nodes" {
   cluster_name    = aws_eks_cluster.sre.name
   node_group_name = "sre-nodes"
@@ -91,6 +122,9 @@ resource "helm_release" "prom_stack" {
   chart            = "kube-prometheus-stack"
   version          = "47.3.0"
   create_namespace = false
+  timeout          = 600
+
+  depends_on  = [aws_eks_node_group.sre_nodes]
 
   values = [<<EOF
 grafana:

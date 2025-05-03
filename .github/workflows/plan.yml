@@ -9,7 +9,6 @@ on:
       - main
     types: [opened, synchronize, reopened]
 
-
 env:
   AWS_REGION: ap-south-1  # Mumbai region
   CLUSTER_NAME: sre-cluster
@@ -36,6 +35,12 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Set up Go Modules and Dependencies
+      run: |
+        cd app/src
+        go mod init github.com/username/sre-app  # Replace with your project module name
+        go mod tidy  # Automatically download dependencies
 
     - name: Build Docker image
       run: |

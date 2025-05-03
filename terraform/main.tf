@@ -65,6 +65,12 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 
 resource "null_resource" "update_aws_auth" {
   depends_on = [aws_eks_node_group.sre_nodes]
+  # Only run when config or files change
+  triggers = {
+   aws_auth_role_arn  = aws_iam_role.eks_node_role.arn
+   deployment_checksum = filesha256("${path.module}/k8s/deployment.yaml")
+   service_checksum = filesha256("${path.module}/k8s/service.yaml")
+ }
 
   provisioner "local-exec" {
     command = <<EOT
@@ -96,6 +102,8 @@ kubectl port-forward -n application svc/sre-app 30001:80 &
 EOT
   }
 }
+
+
 
 resource "aws_eks_node_group" "sre_nodes" {
   cluster_name    = aws_eks_cluster.sre.name

@@ -92,6 +92,9 @@ jobs:
       with:
         name: terraform-plan
         path: terraform/tfplan  # Path to the terraform plan file
+    
+    - name: List Uploaded files
+      run: ls -l ./terraform
 
     - name: Read Terraform Plan Output
       id: read_plan

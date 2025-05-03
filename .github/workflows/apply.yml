@@ -40,7 +40,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan  # Name of the artifact uploaded in plan.yml
-          path: ./tfplan
+          path: ./terrafrom/tfplan
 
       # Ensure Apply Happens Only for Production (main branch)
       - name: Ensure Apply Happens on Main Branch Only

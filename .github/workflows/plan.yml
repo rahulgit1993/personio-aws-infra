@@ -97,7 +97,7 @@ jobs:
       id: read_plan
       run: |
         echo "content<<EOF" >> $GITHUB_ENV
-        cat plan.txt >> $GITHUB_ENV
+        cat terraform/plan.txt >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
     - name: Comment Terraform Plan on GitHub PR

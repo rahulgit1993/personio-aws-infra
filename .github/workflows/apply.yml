@@ -1,11 +1,6 @@
 name: Terraform Apply
 
 on:
-  workflow_run:
-    workflows: ["Terraform Plan"]
-    types:
-      - completed
-
   push:
     branches:
       - main  # Trigger this workflow on pushes to the 'main' branch
@@ -32,7 +27,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0  # Consistent version
-          
+
       - name: List downloaded files
         run: ls -l ./terraform
 

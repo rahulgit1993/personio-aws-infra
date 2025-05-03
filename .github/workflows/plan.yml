@@ -35,7 +35,14 @@ jobs:
     - name: Set up Go Modules and Dependencies
       run: |
         cd app/src
-        go mod tidy  # Automatically download dependencies (no need to run 'go mod init' if already initialized)
+        
+        # Check if go.mod exists, if not create it
+        if [ ! -f "go.mod" ]; then
+          echo "Initializing Go module..."
+          go mod init github.com/username/sre-app  # Replace with your project module name
+        fi
+        
+        go mod tidy  # Automatically download dependencies
 
     # Build Docker Image
     - name: Set up Docker Buildx

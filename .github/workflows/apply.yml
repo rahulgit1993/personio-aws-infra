@@ -6,9 +6,9 @@ on:
     types:
       - completed
 
-#  push:
-#    branches:
-#      - main  # Trigger this workflow on pushes to the 'main' branch
+  push:
+    branches:
+      - main  # Trigger this workflow on pushes to the 'main' branch
 
   # Allow manual trigger via GitHub UI (workflow_dispatch)
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
         with:
           name: terraform-plan  # Name of the artifact uploaded in plan.yml
           path: ./terraform
-          
+
       - name: List downloaded files
         run: ls -l ./terraform
 

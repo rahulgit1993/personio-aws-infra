@@ -63,7 +63,7 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 resource "helm_release" "prom_grafana_stack" {
-  name             = "prom_grafana_stack"
+  name             = "monitor"
   namespace        = kubernetes_namespace.monitoring.metadata[0].name
   repository       = "https://prometheus-community.github.io/helm-charts"
   chart            = "kube-prometheus-stack"
@@ -89,7 +89,11 @@ EOF
 }
 
 resource "null_resource" "update_aws_auth" {
-  depends_on = [aws_eks_node_group.sre_nodes]
+  depends_on = [
+    aws_eks_node_group.sre_nodes,
+    helm_release.prom_grafana_stack
+    ]
+
   # Only run when config or files change
   triggers = {
    aws_auth_role_arn  = aws_iam_role.eks_node_role.arn

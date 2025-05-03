@@ -62,6 +62,31 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
+resource "helm_release" "prom_grafana_stack" {
+  name             = "prom_grafana_stack"
+  namespace        = kubernetes_namespace.monitoring.metadata[0].name
+  repository       = "https://prometheus-community.github.io/helm-charts"
+  chart            = "kube-prometheus-stack"
+  version          = "47.3.0"
+  create_namespace = false
+  timeout          = 600
+
+  depends_on  = [aws_eks_node_group.sre_nodes]
+
+  values = [<<EOF
+grafana:
+  adminPassword: "${var.grafana_admin_password}"
+  service:
+    type: NodePort
+    nodePort: 32000
+prometheus:
+  service:
+    type: NodePort
+    nodePort: 32001
+EOF
+  ]
+  replace = true
+}
 
 resource "null_resource" "update_aws_auth" {
   depends_on = [aws_eks_node_group.sre_nodes]
@@ -94,7 +119,7 @@ EOF
 #Applying our app manifests
 kubectl apply -f ../k8s/deployment.yaml
 kubectl apply -f ../k8s/service.yaml
- 
+sleep 20
 # Port forward to local machine for Grafana and Prometheus
 kubectl port-forward -n monitoring svc/monitoring-grafana 32000:80 &
 kubectl port-forward -n monitoring svc/monitoring-prometheus 32001:9090 &
@@ -131,27 +156,4 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-resource "helm_release" "prom_grafana_stack" {
-  name             = "monitoring"
-  namespace        = kubernetes_namespace.monitoring.metadata[0].name
-  repository       = "https://prometheus-community.github.io/helm-charts"
-  chart            = "kube-prometheus-stack"
-  version          = "47.3.0"
-  create_namespace = false
-  timeout          = 600
 
-  depends_on  = [aws_eks_node_group.sre_nodes]
-
-  values = [<<EOF
-grafana:
-  adminPassword: "${var.grafana_admin_password}"
-  service:
-    type: NodePort
-    nodePort: 32000
-prometheus:
-  service:
-    type: NodePort
-    nodePort: 32001
-EOF
-  ]
-}

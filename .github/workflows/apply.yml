@@ -50,6 +50,15 @@ jobs:
         run: |
            cd terraform
            terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform Plan
+        id: tfplan
+        run: |
+          cd terraform  # Change to the directory containing your .tf files
+          terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
+          cat plan.txt  # This ensures plan.txt is created and readable
+
+      
   #    - name: Initialize Terraform
   #      run: |
   #         cd terraform  # Change to the directory containing your .tf files

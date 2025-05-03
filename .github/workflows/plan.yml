@@ -104,7 +104,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
        name: terraform-plan  # Name of the artifact uploaded in plan.yml
-       path: ./terraform/tfplan
+       path: ./terraform
 
 #    - name: Comment Terraform Plan on GitHub PR
 #      uses: peter-evans/create-or-update-comment@v4

@@ -40,19 +40,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan  # Name of the artifact uploaded in plan.yml
-          path: terraform/tfplan
+          path: ./terraform
+          
+      - name: List downloaded files
+        run: ls -l ./terraform
 
-      # Ensure Apply Happens Only for Production (main branch)
-      - name: Ensure Apply Happens on Main Branch Only
-        if: github.ref == 'refs/heads/main'  # This ensures apply happens only on 'main'
-        run: |
-          echo "Terraform apply will run because we are on the main branch."
+#      - name: Terraform Apply
+#        run: terraform apply -auto-approve ./terraform/tfplan  # Applying the downloaded plan artifact
 
-      # Terraform Apply (only for main branch)
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'  # Only applies if it's on the 'main' branch
-        run: terraform apply -auto-approve ./tfplan/terraform.tfplan  # Applying the plan artifact
-
-      - name: Terraform Apply Output
-        if: github.ref == 'refs/heads/main'  # Only outputs if it's on the 'main' branch
-        run: terraform output  # Output any relevant results from the Terraform apply
+#      - name: Terraform Apply Output
+#        run: terraform output  # Output any relevant results from the Terraform apply

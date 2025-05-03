@@ -84,21 +84,21 @@ jobs:
         terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
         cat plan.txt  # This ensures plan.txt is created and readable
 
-    - name: Upload Terraform Plan Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: terraform-plan
-        path: terraform/tfplan  # Path to the terraform plan file
+#    - name: Upload Terraform Plan Artifact
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: terraform-plan
+#        path: terraform/tfplan  # Path to the terraform plan file
     
-    - name: List Uploaded files
-      run: ls -l ./terraform
+#    - name: List Uploaded files
+#      run: ls -l ./terraform
 
-    - name: Read Terraform Plan Output
-      id: read_plan
-      run: |
-        echo "content<<EOF" >> $GITHUB_ENV
-        cat terraform/plan.txt >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+#    - name: Read Terraform Plan Output
+#      id: read_plan
+#      run: |
+#        echo "content<<EOF" >> $GITHUB_ENV
+#        cat terraform/plan.txt >> $GITHUB_ENV
+#        echo "EOF" >> $GITHUB_ENV
 ##    # Step to download the artifact (tfplan) uploaded in plan.yml
 #   - name: Download Terraform Plan Artifact
 #      uses: actions/download-artifact@v4

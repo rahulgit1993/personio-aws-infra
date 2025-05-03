@@ -19,6 +19,36 @@ resource "aws_subnet" "public" {
   tags = {
     Name                                    = "sre-public-subnet-${count.index}"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    "kubernetes.io/role/elb"                = "1"
   }
+}
+
+# Create an Internet Gateway
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "sre-igw"
+  }
+}
+
+# Create a Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "sre-public-rt"
+  }
+}
+
+# Associate the route table with each public subnet
+resource "aws_route_table_association" "a" {
+  for_each = toset([aws_subnet.public[0].id, aws_subnet.public[1].id])
+
+  subnet_id      = each.value
+  route_table_id = aws_route_table.public_rt.id
 }

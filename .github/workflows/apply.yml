@@ -6,6 +6,13 @@ on:
     types:
       - completed
 
+  push:
+    branches:
+      - main  # Trigger this workflow on pushes to the 'main' branch
+
+  # Allow manual trigger via GitHub UI (workflow_dispatch)
+  workflow_dispatch:
+
 jobs:
   terraform_apply:
     runs-on: ubuntu-latest
@@ -35,8 +42,17 @@ jobs:
           name: terraform-plan  # Name of the artifact uploaded in plan.yml
           path: ./tfplan
 
+      # Ensure Apply Happens Only for Production (main branch)
+      - name: Ensure Apply Happens on Main Branch Only
+        if: github.ref == 'refs/heads/main'  # This ensures apply happens only on 'main'
+        run: |
+          echo "Terraform apply will run because we are on the main branch."
+
+      # Terraform Apply (only for main branch)
       - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'  # Only applies if it's on the 'main' branch
         run: terraform apply -auto-approve ./tfplan/terraform.tfplan  # Applying the plan artifact
 
       - name: Terraform Apply Output
+        if: github.ref == 'refs/heads/main'  # Only outputs if it's on the 'main' branch
         run: terraform output  # Output any relevant results from the Terraform apply

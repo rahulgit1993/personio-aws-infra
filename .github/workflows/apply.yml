@@ -64,10 +64,18 @@ jobs:
         ls -l terraform
         cat terraform/tfplan
 
-    - name: Terraform Apply
+    - name: Terraform Destroy Apply
       run: |
-        cd terraform
-        terraform apply -auto-approve tfplan  # Apply the downloaded plan
+       cd terraform
+       terraform apply -auto-approve tfplan
 
-    - name: Terraform Apply Output
-      run: terraform output  # Output any relevant results from the Terraform apply
+       
+#    - name: Terraform Apply
+#      run: |
+#        cd terraform
+#        terraform apply -auto-approve tfplan  # Apply the downloaded plan
+
+#    - name: Terraform Apply Output
+#      run: terraform output  # Output any relevant results from the Terraform apply
+
+      

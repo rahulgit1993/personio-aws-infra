@@ -92,7 +92,8 @@ jobs:
         path: terraform/tfplan  # Path to the terraform plan file
 
     - name: List uploaded artifacts
-      run: echo "Uploaded artifact: tfplan"
+      run: |
+        echo "Uploaded artifact: tfplan"
     
 #    - name: List Uploaded files
 #      run: ls -l ./terraform

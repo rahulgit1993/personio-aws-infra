@@ -70,7 +70,7 @@ jobs:
         path: tfplan
 
     - name: Comment Terraform Plan on GitHub PR
-      uses: peter-evans/comment-pr@v2
+      uses: peter-evans/comment-pr@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         body: |

@@ -1,9 +1,10 @@
 name: Terraform Apply
 
 on:
-  push:
-    branches:
-      - main  # Trigger this workflow on pushes to the 'main' branch
+  pull_request:
+    types:
+      - closed  # Trigger only when the PR is closed (merged or rejected)
+
 
   # Allow manual trigger via GitHub UI (workflow_dispatch)
   workflow_dispatch:
@@ -18,48 +19,43 @@ env:
   IMAGE_TAG: latest
 
 jobs:
-  terraform_apply:
+  terraform-apply:
+    if: ${{ github.event.pull_request.merged == true }}  # Only if the PR is merged
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: "ap-south-1"  # Mumbai region (Update if needed)
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0  # Consistent version
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.0  # Consistent version
 
-#      - name: Download Terraform Plan Artifact
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: terraform-plan  # Name of the artifact uploaded in plan.yml
-#          path: terraform
+    - name: Terraform Init
+      run: |
+        cd terraform
+        terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+                       -backend-config="key=terraform/state/terraform.tfstate" \
+                       -backend-config="region=${{ env.AWS_REGION }}"
 
-#      - name: List downloaded files
-#        run: ls -l terraform
+    - name: Download tfplan artifact from plan.yml
+      uses: actions/download-artifact@v4
+      with:
+        name: tfplan  # Name of the artifact from plan.yml
+        path: terraform  # Path where the plan artifact will be downloaded
 
-      - name: Terraform Init
-        run: |
-           cd terraform
-           terraform init -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" -backend-config="key=terraform/state/terraform.tfstate" -backend-config="region=${{ env.AWS_REGION }}"
+    - name: Terraform Apply
+      run: |
+        cd terraform
+        terraform apply -auto-approve terraform/tfplan  # Apply the downloaded plan
 
-      - name: Terraform Plan
-        id: tfplan
-        run: |
-          cd terraform  # Change to the directory containing your .tf files
-          terraform plan -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" > plan.txt
-          cat plan.txt  # This ensures plan.txt is created and readable
-          
-      - name: Terraform Apply
-        run: terraform apply -auto-approve ./terraform/tfplan  # Applying the downloaded plan artifact
-
-      - name: Terraform Apply Output
-        run: terraform output  # Output any relevant results from the Terraform apply
+    - name: Terraform Apply Output
+      run: terraform output  # Output any relevant results from the Terraform apply

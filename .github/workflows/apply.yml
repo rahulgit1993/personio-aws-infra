@@ -6,9 +6,9 @@ on:
     types:
       - completed
 
-  push:
-    branches:
-      - main  # Trigger this workflow on pushes to the 'main' branch
+#  push:
+#    branches:
+#      - main  # Trigger this workflow on pushes to the 'main' branch
 
   # Allow manual trigger via GitHub UI (workflow_dispatch)
   workflow_dispatch:

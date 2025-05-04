@@ -130,20 +130,21 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
 resource "null_resource" "update_aws_auth" {
   depends_on = [
     aws_eks_node_group.personio_nodes
-#    helm_release.prometheus,
-#    helm_release.grafana
   ]
 
   triggers = {
-    aws_auth_role_arn  = aws_iam_role.eks_node_role.arn
-    deployment_checksum = filesha256("${path.module}/../k8s/deployment.yaml")
-    service_checksum = filesha256("${path.module}/../k8s/service.yaml")
+    docker_username       = var.DOCKER_USERNAME
+    image_tag             = var.IMAGE_TAG
+    deployment_checksum   = filesha256("${path.module}/../k8s/deployment.yaml")
+    service_checksum      = filesha256("${path.module}/../k8s/service.yaml")
   }
 
   provisioner "local-exec" {
     command = <<EOT
       aws eks update-kubeconfig --region ${var.region} --name ${var.cluster_name}
-      kubectl get configmap aws-auth -n kube-system || true
+
+      export DOCKER_USERNAME="${var.DOCKER_USERNAME}"
+      export IMAGE_TAG="${var.IMAGE_TAG}"
 
       cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -160,11 +161,10 @@ data:
         - system:nodes
 EOF
 
-# Applying application manifests
-kubectl apply -f ../k8s/deployment.yaml
-kubectl apply -f ../k8s/service.yaml
-sleep 20
-kubectl port-forward -n application svc/personio-app 30001:80 &
+      envsubst < ../k8s/deployment.yaml | kubectl apply -f -
+      kubectl apply -f ../k8s/service.yaml
+      sleep 20
+      kubectl port-forward -n application svc/personio-app 30001:80 &
 EOT
   }
 }
@@ -177,8 +177,8 @@ resource "aws_eks_node_group" "personio_nodes" {
   subnet_ids      = aws_subnet.public[*].id
 
   scaling_config {
-    desired_size = 1
-    max_size     = 1
+    desired_size = 2
+    max_size     = 2
     min_size     = 1
   }
 

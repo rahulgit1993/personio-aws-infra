@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: personio-app
-          image: "${{ var.DOCKER_USERNAME }}/personio-app:${{ var.IMAGE_TAG }}"  # Dynamic image tag
+          image: "${DOCKER_USERNAME}/personio-app:${IMAGE_TAG}"  # Dynamic image tag
           ports:
             - containerPort: 8080
           resources:

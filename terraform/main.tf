@@ -174,7 +174,7 @@ resource "aws_launch_template" "eks_node_template" {
 
   security_group_names = [aws_security_group.eks_node_sg.name]
 
-  # Here you can also add other configurations like instance types, AMIs, etc.
+  ## Here you can also add other configurations like instance types, AMIs, etc.
 }
 
 resource "kubernetes_namespace" "application" {

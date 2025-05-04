@@ -163,8 +163,9 @@ EOF
 
       envsubst < ../k8s/deployment.yaml | kubectl apply -f -
       kubectl apply -f ../k8s/service.yaml
-      sleep 20
-      kubectl port-forward -n application svc/personio-app 30001:80 &
+      echo "✅ Deployment and service applied successfully."
+      echo "👉 You can run this locally to access the app:"
+      echo "   kubectl port-forward -n application svc/personio-app 8080:80"
 EOT
   }
 }

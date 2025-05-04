@@ -76,11 +76,11 @@ server:
   replicaCount: 1  # Set to 1 for a minimal setup
   resources:
     requests:
-      memory: "128Mi"
-      cpu: "128m"
+      memory: "50Mi"
+      cpu: "64m"
     limits:
-      memory: "200Mi"
-      cpu: "200m"
+      memory: "100Mi"
+      cpu: "128m"
   podSecurityPolicy:
     enabled: false  # Disable PodSecurityPolicy
 alertmanager:
@@ -112,11 +112,11 @@ service:
   replicaCount: 1  # Set to 1 for minimal resources
 resources:
   requests:
+    memory: "50Mi"
+    cpu: "64m"
+  limits:
     memory: "100Mi"
     cpu: "128m"
-  limits:
-    memory: "200Mi"
-    cpu: "200m"
 podSecurityPolicy:
   enabled: false  # Disable PodSecurityPolicy
 EOF

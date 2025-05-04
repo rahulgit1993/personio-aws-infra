@@ -17,7 +17,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-# EKS Cluster creation
+## EKS Cluster creation
 resource "aws_eks_cluster" "personio" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn

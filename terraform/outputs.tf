@@ -9,6 +9,6 @@ output "prometheus_port_forward_command" {
 }
 
 output "app_port_forward_command" {
-  value       = "kubectl port-forward -n application svc/sre-app 30001:80"
+  value       = "kubectl port-forward -n application svc/personio-app 30001:80"
   description = "Use this command to access your app at http://localhost:30001"
 }

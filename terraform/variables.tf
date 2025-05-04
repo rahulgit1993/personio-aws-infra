@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "cluster_name" {
-  default = "sre-cluster"
+  default = "personio-cluster"
 }
 
 variable "node_instance_type" {
@@ -12,5 +12,14 @@ variable "node_instance_type" {
 
 variable "grafana_admin_password" {
   description = "Grafana admin password"
+  type        = string
+}
+
+variable "DOCKER_USERNAME" {
+  description = "Docker Username"
+  type        = string
+}
+variable "IMAGE_TAG" {
+  description = "Image tag used for container"
   type        = string
 }

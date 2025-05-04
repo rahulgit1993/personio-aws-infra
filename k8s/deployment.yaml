@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sre-app
+  name: personio-app
   namespace: application  # Assuming 'application' namespace for your app
 spec:
   replicas: 2  # Number of replicas (pods) for high availability
@@ -12,15 +12,15 @@ spec:
       maxUnavailable: 0  ## Ensures no pods are taken down during the update
   selector:
     matchLabels:
-      app: sre-app
+      app: personio-app
   template:
     metadata:
       labels:
-        app: sre-app
+        app: personio-app
     spec:
       containers:
-        - name: sre-app
-          image: "${{ secrets.DOCKER_USERNAME }}/sre-app:${IMAGE_TAG}"  # Dynamic image tag
+        - name: personio-app
+          image: "${{ var.DOCKER_USERNAME }}/personio-app:${{ var.IMAGE_TAG }}"  # Dynamic image tag
           ports:
             - containerPort: 8080
           resources:

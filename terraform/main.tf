@@ -18,7 +18,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_attach" {
 }
 
 # EKS Cluster creation
-resource "aws_eks_cluster" "sre" {
+resource "aws_eks_cluster" "personio" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
 
@@ -27,12 +27,12 @@ resource "aws_eks_cluster" "sre" {
     security_group_ids  = [aws_security_group.eks_cluster_sg.id]
   }
 }
-data "aws_eks_cluster" "sre" {
-  name = aws_eks_cluster.sre.name
+data "aws_eks_cluster" "personio" {
+  name = aws_eks_cluster.personio.name
 }
 
-data "aws_eks_cluster_auth" "sre" {
-  name = aws_eks_cluster.sre.name
+data "aws_eks_cluster_auth" "personio" {
+  name = aws_eks_cluster.personio.name
 }
 
 resource "aws_iam_role" "eks_node_role" {
@@ -80,7 +80,7 @@ service:
 EOF
   ]
 
-  depends_on = [aws_eks_node_group.sre_nodes]
+  depends_on = [aws_eks_node_group.personio_nodes]
 }
 
 # Lightweight Grafana setup via Helm
@@ -100,13 +100,13 @@ service:
 EOF
   ]
 
-  depends_on = [aws_eks_node_group.sre_nodes]
+  depends_on = [aws_eks_node_group.personio_nodes]
 }
 
 # Port Forwarding Setup and AWS Auth Update
 resource "null_resource" "update_aws_auth" {
   depends_on = [
-    aws_eks_node_group.sre_nodes,
+    aws_eks_node_group.personio_nodes,
     helm_release.prometheus,
     helm_release.grafana
   ]
@@ -144,15 +144,15 @@ sleep 20
 # Port forward to local machine for Grafana and Prometheus
 kubectl port-forward -n monitoring svc/prometheus-server 32001:80 &
 kubectl port-forward -n monitoring svc/grafana 32000:80 &
-kubectl port-forward -n application svc/sre-app 30001:80 &
+kubectl port-forward -n application svc/personio-app 30001:80 &
 EOT
   }
 }
 
 
-resource "aws_eks_node_group" "sre_nodes" {
-  cluster_name    = aws_eks_cluster.sre.name
-  node_group_name = "sre-nodes"
+resource "aws_eks_node_group" "personio_nodes" {
+  cluster_name    = aws_eks_cluster.personio.name
+  node_group_name = "personio-nodes"
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = aws_subnet.public[*].id
   instance_types  = [var.node_instance_type]

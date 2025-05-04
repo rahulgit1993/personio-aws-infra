@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "cluster_name" {
-  default = "sre-cluster"
+  default = "personio-cluster"
 }
 
 variable "node_instance_type" {

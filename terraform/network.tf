@@ -5,7 +5,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "sre-vpc"
+    Name = "personio-vpc"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
   tags = {
-    Name                                    = "sre-public-subnet-${count.index}"
+    Name                                    = "personio-public-subnet-${count.index}"
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 }
@@ -26,7 +26,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "sre-igw"
+    Name = "personio-igw"
   }
 }
 
@@ -40,7 +40,7 @@ resource "aws_route_table" "public_rt" {
   }
 
   tags = {
-    Name = "sre-public-rt"
+    Name = "personio-public-rt"
   }
 }
 

@@ -8,12 +8,12 @@ on:
 
 env:
   AWS_REGION: ap-south-1  # Mumbai region
-  CLUSTER_NAME: sre-cluster
+  CLUSTER_NAME: personio-cluster
   TF_STATE_BUCKET: personio-aws-infra-statebucket  # Replace with your S3 bucket name
   PLAIN_FILE_KEY: terraform/tfplan
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  IMAGE_NAME: sre-app
+  IMAGE_NAME: personio-app
   IMAGE_TAG: latest
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
         # Check if go.mod exists, if not create it
         if [ ! -f "go.mod" ]; then
           echo "Initializing Go module..."
-          go mod init github.com/username/sre-app  # Replace with your project module name
+          go mod init github.com/username/personio-app  # Replace with your project module name
         fi
         
         go mod tidy  # Automatically download dependencies

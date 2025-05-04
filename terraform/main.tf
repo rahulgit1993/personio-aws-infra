@@ -59,12 +59,6 @@ resource "aws_iam_role_policy_attachment" "cni_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
-resource "aws_iam_role_policy_attachment" "ecr_readonly" {
-  role       = aws_iam_role.eks_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-# Lightweight Prometheus setup via Helm
 resource "helm_release" "prometheus" {
   name       = "prometheus"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
@@ -73,9 +67,54 @@ resource "helm_release" "prometheus" {
   version    = "15.1.0"
 
   values = [<<EOF
+server:
+  resources:
+    requests:
+      memory: "100Mi"
+      cpu: "100m"
+    limits:
+      memory: "200Mi"
+      cpu: "200m"
+
+alertmanager:
+  resources:
+    requests:
+      memory: "50Mi"
+      cpu: "50m"
+    limits:
+      memory: "100Mi"
+      cpu: "100m"
+
+pushgateway:
+  resources:
+    requests:
+      memory: "20Mi"
+      cpu: "20m"
+    limits:
+      memory: "50Mi"
+      cpu: "50m"
+
+kubeStateMetrics:
+  resources:
+    requests:
+      memory: "30Mi"
+      cpu: "30m"
+    limits:
+      memory: "60Mi"
+      cpu: "60m"
+
+nodeExporter:
+  resources:
+    requests:
+      memory: "20Mi"
+      cpu: "20m"
+    limits:
+      memory: "40Mi"
+      cpu: "40m"
+
 service:
   type: NodePort
-  nodePort: 32001  # Expose Prometheus on port 32001
+  nodePort: 32001
   replicaCount: 1
 EOF
   ]
@@ -83,7 +122,7 @@ EOF
   depends_on = [aws_eks_node_group.personio_nodes]
 }
 
-# Lightweight Grafana setup via Helm
+
 resource "helm_release" "grafana" {
   name       = "grafana"
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
@@ -93,15 +132,25 @@ resource "helm_release" "grafana" {
 
   values = [<<EOF
 adminPassword: "${var.grafana_admin_password}"
+
+resources:
+  requests:
+    memory: "100Mi"
+    cpu: "100m"
+  limits:
+    memory: "200Mi"
+    cpu: "200m"
+
 service:
   type: NodePort
-  nodePort: 32000  # Expose Grafana on port 32000
+  nodePort: 32000
   replicaCount: 1
 EOF
   ]
 
   depends_on = [aws_eks_node_group.personio_nodes]
 }
+
 
 # Port Forwarding Setup and AWS Auth Update
 resource "null_resource" "update_aws_auth" {
@@ -157,7 +206,7 @@ resource "aws_eks_node_group" "personio_nodes" {
   subnet_ids      = aws_subnet.public[*].id
 
   scaling_config {
-    desired_size = 2
+    desired_size = 3
     max_size     = 3
     min_size     = 1
   }
@@ -198,11 +247,20 @@ resource "helm_release" "kube_state_metrics" {
   version    = "2.0.0"
 
   values = [<<EOF
+replicaCount: 1
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
 service:
-  type: ClusterIP  # Expose internally only
-  replicaCount: 1    # Single replica by default
+  type: ClusterIP
 EOF
   ]
 
   depends_on = [aws_eks_node_group.personio_nodes]
 }
+

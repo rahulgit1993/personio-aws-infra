@@ -73,59 +73,28 @@ resource "helm_release" "prometheus" {
 
   values = [<<EOF
 server:
+  replicaCount: 1  # Set to 1 for a minimal setup
   resources:
     requests:
-      memory: "100Mi"
-      cpu: "100m"
+      memory: "50Mi"
+      cpu: "64m"
     limits:
-      memory: "200Mi"
-      cpu: "200m"
-
+      memory: "100Mi"
+      cpu: "128m"
+  podSecurityPolicy:
+    enabled: false  # Disable PodSecurityPolicy
 alertmanager:
-  resources:
-    requests:
-      memory: "50Mi"
-      cpu: "50m"
-    limits:
-      memory: "100Mi"
-      cpu: "100m"
-
+  enabled: false  # Disable Alertmanager
 pushgateway:
-  resources:
-    requests:
-      memory: "20Mi"
-      cpu: "20m"
-    limits:
-      memory: "50Mi"
-      cpu: "50m"
-
+  enabled: false  # Disable Pushgateway
 kubeStateMetrics:
-  resources:
-    requests:
-      memory: "30Mi"
-      cpu: "30m"
-    limits:
-      memory: "60Mi"
-      cpu: "60m"
-
-nodeExporter:
-  resources:
-    requests:
-      memory: "20Mi"
-      cpu: "20m"
-    limits:
-      memory: "40Mi"
-      cpu: "40m"
-
-service:
-  type: NodePort
-  nodePort: 32001
-  replicaCount: 1
+  enabled: false  # Disable KubeStateMetrics as it's handled by kube-state-metrics chart
 EOF
   ]
 
   depends_on = [aws_eks_node_group.personio_nodes]
 }
+
 
 
 resource "helm_release" "grafana" {
@@ -137,24 +106,25 @@ resource "helm_release" "grafana" {
 
   values = [<<EOF
 adminPassword: "${var.grafana_admin_password}"
-
-resources:
-  requests:
-    memory: "100Mi"
-    cpu: "100m"
-  limits:
-    memory: "200Mi"
-    cpu: "200m"
-
 service:
   type: NodePort
-  nodePort: 32000
-  replicaCount: 1
+  nodePort: 32000  # Expose Grafana on port 32000
+  replicaCount: 1  # Set to 1 for minimal resources
+resources:
+  requests:
+    memory: "50Mi"
+    cpu: "64m"
+  limits:
+    memory: "100Mi"
+    cpu: "128m"
+podSecurityPolicy:
+  enabled: false  # Disable PodSecurityPolicy
 EOF
   ]
 
   depends_on = [aws_eks_node_group.personio_nodes]
 }
+
 
 
 # Port Forwarding Setup and AWS Auth Update
@@ -249,10 +219,12 @@ resource "helm_release" "kube_state_metrics" {
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
   repository = "https://kubernetes.github.io/kube-state-metrics"
   chart      = "kube-state-metrics"
-  version    = "2.0.0"
+  version    = "5.17.0"
 
   values = [<<EOF
 replicaCount: 1
+podSecurityPolicy:
+  enabled: false  # Disable PodSecurityPolicy
 resources:
   requests:
     cpu: 50m

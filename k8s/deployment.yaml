@@ -8,7 +8,7 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1  ### One extra pod can be created during the update
+      maxSurge: 1  ## One extra pod can be created during the update
       maxUnavailable: 0  ## Ensures no pods are taken down during the update
   selector:
     matchLabels:

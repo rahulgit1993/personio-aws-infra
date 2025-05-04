@@ -64,66 +64,6 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-#resource "helm_release" "prometheus" {
-#  name       = "prometheus"
-#repository = "https://prometheus-community.github.io/helm-charts"
-#  chart      = "prometheus"
-#  version    = "15.1.0"
-
-# values = [<<EOF
-#server:
-#  replicaCount: 1  # Set to 1 for a minimal setup
-#  resources:
-#    requests:
-#      memory: "50Mi"
-#      cpu: "64m"
-##    limits:
-#      memory: "100Mi"
-#      cpu: "128m"
-#  podSecurityPolicy:
-#    enabled: false  # Disable PodSecurityPolicy
-#alertmanager:
-#  enabled: false  # Disable Alertmanager
-#pushgateway:
-#  enabled: false  # Disable Pushgateway
-#kubeStateMetrics:
-#  enabled: false  # Disable KubeStateMetrics as it's handled by kube-state-metrics chart
-#EOF
-#  ]
-
-#  depends_on = [aws_eks_node_group.personio_nodes]
-#}
-
-
-
-#resource "helm_release" "grafana" {
-#  name       = "grafana"
-#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-#  repository = "https://grafana.github.io/helm-charts"
-#  chart      = "grafana"
-#  version    = "6.16.2"
-
-#  values = [<<EOF
-#adminPassword: "${var.grafana_admin_password}"
-#service:
-#  type: NodePort
-#  nodePort: 32000  # Expose Grafana on port 32000
-#  replicaCount: 1  # Set to 1 for minimal resources
-#resources:
-#  requests:
-#    memory: "50Mi"
-#    cpu: "64m"
-#  limits:
-#    memory: "100Mi"
-#    cpu: "128m"
-#podSecurityPolicy:
-#  enabled: false  # Disable PodSecurityPolicy
-#EOF
-#  ]
-
-#  depends_on = [aws_eks_node_group.personio_nodes]
-#}
-
 
 
 # Port Forwarding Setup and AWS Auth Update
@@ -210,31 +150,3 @@ resource "kubernetes_namespace" "monitoring" {
     name = "monitoring"
   }
 }
-
-#resource "helm_release" "kube_state_metrics" {
-#  name       = "kube-state-metrics"
-#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-#  repository = "https://kubernetes.github.io/kube-state-metrics"
-#  chart      = "kube-state-metrics"
-#  version    = "5.17.0"
-
-#  values = [<<EOF
-#replicaCount: 1
-#podSecurityPolicy:
-#  enabled: false  # Disable PodSecurityPolicy
-#resources:
-#  requests:
-#    cpu: 50m
-#    memory: 64Mi
-#  limits:
-#    cpu: 100m
-#    memory: 128Mi
-
-#service:
-#  type: ClusterIP
-#EOF
-#  ]
-
-#  depends_on = [aws_eks_node_group.personio_nodes]
-#}
-

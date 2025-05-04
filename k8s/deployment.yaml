@@ -4,7 +4,7 @@ metadata:
   name: personio-app
   namespace: application  # Assuming 'application' namespace for your app
 spec:
-  replicas: 2  # Number of replicas (pods) for high availability
+  replicas: 1  # Number of replicas (pods) for high availability
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -21,6 +21,7 @@ spec:
       containers:
         - name: personio-app
           image: "${DOCKER_USERNAME}/personio-app:${IMAGE_TAG}"  # Dynamic image tag
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           resources:

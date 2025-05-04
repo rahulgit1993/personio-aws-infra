@@ -86,11 +86,11 @@ jobs:
         cd terraform  # Change to the directory containing your .tf files
         terraform plan -out=tfplan -var="DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" -var="IMAGE_TAG=${{ env.IMAGE_TAG }}"
 
-    - name: Terraform Destroy Plan
-      run: |
-        cd terraform
-        terraform init
-        terraform plan -destroy -out=tfplan -var="DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" -var="IMAGE_TAG=${{ env.IMAGE_TAG }}"
+#    - name: Terraform Destroy Plan
+#      run: |
+#        cd terraform
+#        terraform init
+#        terraform plan -destroy -out=tfplan -var="DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" -var="IMAGE_TAG=${{ env.IMAGE_TAG }}"
 
     - name: Upload Terraform Plan to s3
       run: | 

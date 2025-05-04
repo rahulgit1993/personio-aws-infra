@@ -64,75 +64,74 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-resource "helm_release" "prometheus" {
-  name       = "prometheus"
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "prometheus"
-  version    = "15.1.0"
+#resource "helm_release" "prometheus" {
+#  name       = "prometheus"
+#repository = "https://prometheus-community.github.io/helm-charts"
+#  chart      = "prometheus"
+#  version    = "15.1.0"
 
-  values = [<<EOF
-server:
-  replicaCount: 1  # Set to 1 for a minimal setup
-  resources:
-    requests:
-      memory: "50Mi"
-      cpu: "64m"
-    limits:
-      memory: "100Mi"
-      cpu: "128m"
-  podSecurityPolicy:
-    enabled: false  # Disable PodSecurityPolicy
-alertmanager:
-  enabled: false  # Disable Alertmanager
-pushgateway:
-  enabled: false  # Disable Pushgateway
-kubeStateMetrics:
-  enabled: false  # Disable KubeStateMetrics as it's handled by kube-state-metrics chart
-EOF
-  ]
+# values = [<<EOF
+#server:
+#  replicaCount: 1  # Set to 1 for a minimal setup
+#  resources:
+#    requests:
+#      memory: "50Mi"
+#      cpu: "64m"
+##    limits:
+#      memory: "100Mi"
+#      cpu: "128m"
+#  podSecurityPolicy:
+#    enabled: false  # Disable PodSecurityPolicy
+#alertmanager:
+#  enabled: false  # Disable Alertmanager
+#pushgateway:
+#  enabled: false  # Disable Pushgateway
+#kubeStateMetrics:
+#  enabled: false  # Disable KubeStateMetrics as it's handled by kube-state-metrics chart
+#EOF
+#  ]
 
-  depends_on = [aws_eks_node_group.personio_nodes]
-}
-
+#  depends_on = [aws_eks_node_group.personio_nodes]
+#}
 
 
-resource "helm_release" "grafana" {
-  name       = "grafana"
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  repository = "https://grafana.github.io/helm-charts"
-  chart      = "grafana"
-  version    = "6.16.2"
 
-  values = [<<EOF
-adminPassword: "${var.grafana_admin_password}"
-service:
-  type: NodePort
-  nodePort: 32000  # Expose Grafana on port 32000
-  replicaCount: 1  # Set to 1 for minimal resources
-resources:
-  requests:
-    memory: "50Mi"
-    cpu: "64m"
-  limits:
-    memory: "100Mi"
-    cpu: "128m"
-podSecurityPolicy:
-  enabled: false  # Disable PodSecurityPolicy
-EOF
-  ]
+#resource "helm_release" "grafana" {
+#  name       = "grafana"
+#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+#  repository = "https://grafana.github.io/helm-charts"
+#  chart      = "grafana"
+#  version    = "6.16.2"
 
-  depends_on = [aws_eks_node_group.personio_nodes]
-}
+#  values = [<<EOF
+#adminPassword: "${var.grafana_admin_password}"
+#service:
+#  type: NodePort
+#  nodePort: 32000  # Expose Grafana on port 32000
+#  replicaCount: 1  # Set to 1 for minimal resources
+#resources:
+#  requests:
+#    memory: "50Mi"
+#    cpu: "64m"
+#  limits:
+#    memory: "100Mi"
+#    cpu: "128m"
+#podSecurityPolicy:
+#  enabled: false  # Disable PodSecurityPolicy
+#EOF
+#  ]
+
+#  depends_on = [aws_eks_node_group.personio_nodes]
+#}
 
 
 
 # Port Forwarding Setup and AWS Auth Update
 resource "null_resource" "update_aws_auth" {
   depends_on = [
-    aws_eks_node_group.personio_nodes,
-    helm_release.prometheus,
-    helm_release.grafana
+    aws_eks_node_group.personio_nodes
+#    helm_release.prometheus,
+#    helm_release.grafana
   ]
 
   triggers = {
@@ -165,9 +164,6 @@ EOF
 kubectl apply -f ../k8s/deployment.yaml
 kubectl apply -f ../k8s/service.yaml
 sleep 20
-# Port forward to local machine for Grafana and Prometheus
-kubectl port-forward -n monitoring svc/prometheus-server 32001:80 &
-kubectl port-forward -n monitoring svc/grafana 32000:80 &
 kubectl port-forward -n application svc/personio-app 30001:80 &
 EOT
   }
@@ -181,8 +177,8 @@ resource "aws_eks_node_group" "personio_nodes" {
   subnet_ids      = aws_subnet.public[*].id
 
   scaling_config {
-    desired_size = 3
-    max_size     = 3
+    desired_size = 1
+    max_size     = 1
     min_size     = 1
   }
 
@@ -214,30 +210,30 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
-resource "helm_release" "kube_state_metrics" {
-  name       = "kube-state-metrics"
-  namespace  = kubernetes_namespace.monitoring.metadata[0].name
-  repository = "https://kubernetes.github.io/kube-state-metrics"
-  chart      = "kube-state-metrics"
-  version    = "5.17.0"
+#resource "helm_release" "kube_state_metrics" {
+#  name       = "kube-state-metrics"
+#  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+#  repository = "https://kubernetes.github.io/kube-state-metrics"
+#  chart      = "kube-state-metrics"
+#  version    = "5.17.0"
 
-  values = [<<EOF
-replicaCount: 1
-podSecurityPolicy:
-  enabled: false  # Disable PodSecurityPolicy
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 100m
-    memory: 128Mi
+#  values = [<<EOF
+#replicaCount: 1
+#podSecurityPolicy:
+#  enabled: false  # Disable PodSecurityPolicy
+#resources:
+#  requests:
+#    cpu: 50m
+#    memory: 64Mi
+#  limits:
+#    cpu: 100m
+#    memory: 128Mi
 
-service:
-  type: ClusterIP
-EOF
-  ]
+#service:
+#  type: ClusterIP
+#EOF
+#  ]
 
-  depends_on = [aws_eks_node_group.personio_nodes]
-}
+#  depends_on = [aws_eks_node_group.personio_nodes]
+#}
 

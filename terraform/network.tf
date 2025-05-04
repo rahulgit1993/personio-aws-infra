@@ -46,11 +46,12 @@ resource "aws_route_table" "public_rt" {
 
 # Associate the route table with each public subnet
 resource "aws_route_table_association" "a" {
-  for_each = toset([aws_subnet.public[0].id, aws_subnet.public[1].id])
+  for_each = { for idx, subnet in aws_subnet.public : idx => subnet.id }
 
   subnet_id      = each.value
   route_table_id = aws_route_table.public_rt.id
 }
+
 
 # Security Group for EKS Node Group, Prometheus, Grafana, and App Access
 resource "aws_security_group" "eks_node_sg" {

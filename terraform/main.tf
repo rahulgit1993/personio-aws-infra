@@ -154,39 +154,28 @@ resource "aws_eks_node_group" "personio_nodes" {
   cluster_name    = aws_eks_cluster.personio.name
   node_group_name = "personio-nodes"
   node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = aws_subnet.public[*].id  # Specify subnets for the node group
+  subnet_ids      = aws_subnet.public[*].id
 
   scaling_config {
-    desired_size = 3
+    desired_size = 2
     max_size     = 3
-    min_size     = 3
+    min_size     = 1
   }
 
-  # Reference the launch template, do not specify instance types here
-  launch_template {
-    id      = aws_launch_template.eks_node_template.id
-    version = "$Latest"  # Use the latest version of the launch template
-  }
-}
-
-resource "aws_launch_template" "eks_node_template" {
-  name_prefix   = "eks-node-template-"
-  # Define the instance type inside the launch template
-  instance_type = "t3.micro"  # Instance type for your nodes
-
-  network_interfaces {
-    associate_public_ip_address = true
-    security_groups = [aws_security_group.eks_node_sg.id]  # Define the security group in the launch template
-  }
+  instance_types = ["t3.micro"]
 
   tags = {
-    "Name" = "eks-node-launch-template"
+    Name = "personio-nodes"
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  depends_on = [
+    aws_iam_role_policy_attachment.node_attach,
+    aws_iam_role_policy_attachment.cni_attach,
+    aws_iam_role_policy_attachment.ecr_readonly
+  ]
 }
+
+
 
 
 resource "kubernetes_namespace" "application" {

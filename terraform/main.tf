@@ -189,4 +189,19 @@ resource "kubernetes_namespace" "monitoring" {
   }
 }
 
+resource "helm_release" "kube_state_metrics" {
+  name       = "kube-state-metrics"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  repository = "https://kubernetes.github.io/kube-state-metrics"
+  chart      = "kube-state-metrics"
+  version    = "2.0.0"
 
+  values = [<<EOF
+service:
+  type: ClusterIP  # Expose internally only
+  replicaCount: 1    # Single replica by default
+EOF
+  ]
+
+  depends_on = [aws_eks_node_group.sre_nodes]
+}

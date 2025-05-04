@@ -38,7 +38,8 @@ jobs:
           echo "Initializing Go module..."
           go mod init github.com/username/personio-app  # Replace with your project module name
         fi
-        
+        # Install Prometheus Go Client Dependency
+        go get github.com/prometheus/client_golang/prometheus 
         go mod tidy  # Automatically download dependencies
 
     # Build Docker Image

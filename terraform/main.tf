@@ -154,8 +154,7 @@ resource "aws_eks_node_group" "personio_nodes" {
   cluster_name    = aws_eks_cluster.personio.name
   node_group_name = "personio-nodes"
   node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = aws_subnet.public[*].id  # Use subnet_ids here
-  instance_types  = [var.node_instance_type]
+  subnet_ids      = aws_subnet.public[*].id  # Specify subnets for the node group
 
   scaling_config {
     desired_size = 3
@@ -163,22 +162,23 @@ resource "aws_eks_node_group" "personio_nodes" {
     min_size     = 3
   }
 
-  # Attach the launch template ID, security group will be in the launch template
+  # Reference the launch template without instance_types
   launch_template {
     id      = aws_launch_template.eks_node_template.id
-    version = "$Latest"
+    version = "$Latest"  # Use the latest version of the launch template
   }
 }
-
 resource "aws_launch_template" "eks_node_template" {
-  name = "eks-node-launch-template"
+  name_prefix   = "eks-node-template-"
+  instance_type = var.node_instance_type   # Instance type for your nodes
 
-  # Define the instance type
-  instance_type = var.node_instance_type
-
-  # Define the security group here inside the launch template
   network_interfaces {
-    security_groups = [aws_security_group.eks_node_sg.id]  # Define security group in launch template
+    associate_public_ip_address = true
+    security_groups            = [aws_security_group.eks_node_sg.id]   # Use your security group here
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

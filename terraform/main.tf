@@ -203,5 +203,5 @@ service:
 EOF
   ]
 
-  depends_on = [aws_eks_node_group.sre_nodes]
+  depends_on = [aws_eks_node_group.personio_nodes]
 }

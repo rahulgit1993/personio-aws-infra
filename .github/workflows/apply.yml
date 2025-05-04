@@ -17,8 +17,8 @@ env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   IMAGE_NAME: personio-app
-  #IMAGE_TAG: ${{ github.sha }}
-  IMAGE_TAG: bce45b1f47897a8fe54292be7560c863f76c37cd
+  IMAGE_TAG: ${{ github.sha }}
+  
 
 jobs:
   terraform-apply:
@@ -59,18 +59,18 @@ jobs:
         ls -l terraform
         cat terraform/tfplan
 
-#    - name: Terraform Destroy Apply
-#      run: |
-#       cd terraform
-#       terraform apply -auto-approve tfplan
+    - name: Terraform Destroy Apply
+      run: |
+       cd terraform
+       terraform apply -auto-approve tfplan
 
        
-    - name: Terraform Apply
-      run: |
-        cd terraform
-        terraform apply -auto-approve tfplan  # Apply the downloaded plan
+#    - name: Terraform Apply
+#      run: |
+#        cd terraform
+#        terraform apply -auto-approve tfplan  # Apply the downloaded plan
 
-    - name: Terraform Apply Output
-      run: terraform output  # Output any relevant results from the Terraform apply
+#    - name: Terraform Apply Output
+#      run: terraform output  # Output any relevant results from the Terraform apply
 
       

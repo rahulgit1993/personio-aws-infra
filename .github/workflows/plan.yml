@@ -91,11 +91,11 @@ jobs:
 #        path: terraform/tfplan  # Path to the terraform plan file
 
 
-    - name: Terraform Destroy Plan
-      run: |
-        cd terraform
-        terraform init
-        terraform plan -destroy -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}"
+#    - name: Terraform Destroy Plan
+#      run: |
+#        cd terraform
+#        terraform init
+#        terraform plan -destroy -out=tfplan -var="grafana_admin_password=${{ secrets.GRAFANA_ADMIN_PASSWORD }}" -var="DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" -var="IMAGE_TAG=${{ env.IMAGE_TAG }}"
 
     - name: Upload Terraform Plan to s3
       run: | 

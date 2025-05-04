@@ -17,15 +17,16 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
+# EKS Cluster creation
 resource "aws_eks_cluster" "sre" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
 
   vpc_config {
-    subnet_ids = aws_subnet.public[*].id
+    subnet_ids          = aws_subnet.public[*].id
+    security_group_ids  = [aws_security_group.eks_cluster_sg.id]
   }
 }
-
 data "aws_eks_cluster" "sre" {
   name = aws_eks_cluster.sre.name
 }
@@ -62,44 +63,59 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   role       = aws_iam_role.eks_node_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
-resource "helm_release" "prom_grafana_stack" {
-  name             = "monitor"
-  namespace        = kubernetes_namespace.monitoring.metadata[0].name
-  repository       = "https://prometheus-community.github.io/helm-charts"
-  chart            = "kube-prometheus-stack"
-  version          = "47.3.0"
-  create_namespace = false
-  timeout          = 600
 
-  depends_on  = [aws_eks_node_group.sre_nodes]
+# Lightweight Prometheus setup via Helm
+resource "helm_release" "prometheus" {
+  name       = "prometheus"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  repository = "https://prometheus-community.github.io/helm-charts"
+  chart      = "prometheus"
+  version    = "15.1.0"
 
   values = [<<EOF
-grafana:
-  adminPassword: "${var.grafana_admin_password}"
-  service:
-    type: NodePort
-    nodePort: 32000
-prometheus:
-  service:
-    type: NodePort
-    nodePort: 32001
+service:
+  type: NodePort
+  nodePort: 32001  # Expose Prometheus on port 32001
+  replicaCount: 1
 EOF
   ]
-  replace = true
+
+  depends_on = [aws_eks_node_group.sre_nodes]
 }
 
+# Lightweight Grafana setup via Helm
+resource "helm_release" "grafana" {
+  name       = "grafana"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
+  repository = "https://grafana.github.io/helm-charts"
+  chart      = "grafana"
+  version    = "6.16.2"
+
+  values = [<<EOF
+adminPassword: "${var.grafana_admin_password}"
+service:
+  type: NodePort
+  nodePort: 32000  # Expose Grafana on port 32000
+  replicaCount: 1
+EOF
+  ]
+
+  depends_on = [aws_eks_node_group.sre_nodes]
+}
+
+# Port Forwarding Setup and AWS Auth Update
 resource "null_resource" "update_aws_auth" {
   depends_on = [
     aws_eks_node_group.sre_nodes,
-    helm_release.prom_grafana_stack
-    ]
+    helm_release.prometheus,
+    helm_release.grafana
+  ]
 
-  # Only run when config or files change
   triggers = {
-   aws_auth_role_arn  = aws_iam_role.eks_node_role.arn
-   deployment_checksum = filesha256("${path.module}/../k8s/deployment.yaml")
-   service_checksum = filesha256("${path.module}/../k8s/service.yaml")
- }
+    aws_auth_role_arn  = aws_iam_role.eks_node_role.arn
+    deployment_checksum = filesha256("${path.module}/../k8s/deployment.yaml")
+    service_checksum = filesha256("${path.module}/../k8s/service.yaml")
+  }
 
   provisioner "local-exec" {
     command = <<EOT
@@ -120,18 +136,18 @@ data:
         - system:bootstrappers
         - system:nodes
 EOF
-#Applying our app manifests
+
+# Applying application manifests
 kubectl apply -f ../k8s/deployment.yaml
 kubectl apply -f ../k8s/service.yaml
 sleep 20
 # Port forward to local machine for Grafana and Prometheus
-kubectl port-forward -n monitoring svc/monitoring-grafana 32000:80 &
-kubectl port-forward -n monitoring svc/monitoring-prometheus 32001:9090 &
+kubectl port-forward -n monitoring svc/prometheus-server 32001:80 &
+kubectl port-forward -n monitoring svc/grafana 32000:80 &
 kubectl port-forward -n application svc/sre-app 30001:80 &
 EOT
   }
 }
-
 
 
 resource "aws_eks_node_group" "sre_nodes" {
@@ -146,6 +162,19 @@ resource "aws_eks_node_group" "sre_nodes" {
     max_size     = 3
     min_size     = 3
   }
+
+  launch_template {
+    id      = aws_launch_template.eks_node_template.id
+    version = "$Latest"
+  }
+}
+
+resource "aws_launch_template" "eks_node_template" {
+  name = "eks-node-launch-template"
+
+  security_group_names = [aws_security_group.eks_node_sg.name]
+
+  # Here you can also add other configurations like instance types, AMIs, etc.
 }
 
 resource "kubernetes_namespace" "application" {

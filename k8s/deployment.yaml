@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: sre-app
-          image: "${{ secrets.DOCKER_USERNAME }}/sre-app:${IMAGE_TAG}"  # Dynamic image tag
+          image: "${{ var.DOCKER_USERNAME }}/sre-app:${{ var.IMAGE_TAG }}"  # Dynamic image tag
           ports:
             - containerPort: 8080
           resources:

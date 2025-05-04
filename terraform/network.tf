@@ -1,4 +1,3 @@
-# vpc/network.tf
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
@@ -51,4 +50,86 @@ resource "aws_route_table_association" "a" {
 
   subnet_id      = each.value
   route_table_id = aws_route_table.public_rt.id
+}
+
+# Security Group for EKS Node Group, Prometheus, Grafana, and App Access
+resource "aws_security_group" "eks_node_sg" {
+  name_prefix = "eks-node-sg"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "Allow HTTP traffic for app"
+    from_port   = 30001
+    to_port     = 30001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow Prometheus traffic"
+    from_port   = 32001
+    to_port     = 32001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow Grafana traffic"
+    from_port   = 32000
+    to_port     = 32000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow SSH for diagnostics (optional)"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS for future use (optional)"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "eks-node-sg"
+  }
+}
+
+# Security Group for EKS Cluster (Control Plane Access)
+resource "aws_security_group" "eks_cluster_sg" {
+  name_prefix = "eks-cluster-sg"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "Allow traffic from EKS nodes to EKS control plane"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = aws_subnet.public[*].cidr_block
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "eks-cluster-sg"
+  }
 }

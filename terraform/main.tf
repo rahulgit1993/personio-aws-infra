@@ -162,25 +162,32 @@ resource "aws_eks_node_group" "personio_nodes" {
     min_size     = 3
   }
 
-  # Reference the launch template without instance_types
+  # Reference the launch template, do not specify instance types here
   launch_template {
     id      = aws_launch_template.eks_node_template.id
     version = "$Latest"  # Use the latest version of the launch template
   }
 }
+
 resource "aws_launch_template" "eks_node_template" {
   name_prefix   = "eks-node-template-"
-  instance_type = var.node_instance_type   # Instance type for your nodes
+  # Define the instance type inside the launch template
+  instance_type = t3.micro  # Instance type for your nodes
 
   network_interfaces {
     associate_public_ip_address = true
-    security_groups            = [aws_security_group.eks_node_sg.id]   # Use your security group here
+    security_groups = [aws_security_group.eks_node_sg.id]  # Define the security group in the launch template
+  }
+
+  tags = {
+    "Name" = "eks-node-launch-template"
   }
 
   lifecycle {
     create_before_destroy = true
   }
 }
+
 
 resource "kubernetes_namespace" "application" {
   metadata {

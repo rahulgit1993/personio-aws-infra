@@ -172,7 +172,7 @@ resource "aws_eks_node_group" "personio_nodes" {
 resource "aws_launch_template" "eks_node_template" {
   name_prefix   = "eks-node-template-"
   # Define the instance type inside the launch template
-  instance_type = t3.micro  # Instance type for your nodes
+  instance_type = "t3.micro"  # Instance type for your nodes
 
   network_interfaces {
     associate_public_ip_address = true

@@ -168,7 +168,7 @@ EOF
 EOT
   }
 }
-
+#
 
 resource "aws_eks_node_group" "personio_nodes" {
   cluster_name    = aws_eks_cluster.personio.name

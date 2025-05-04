@@ -12,16 +12,17 @@ on:
 env:
   AWS_REGION: ap-south-1  # Mumbai region
   CLUSTER_NAME: personio-cluster
-  TF_STATE_BUCKET: personio-aws-infra-statebucket  # Replace with your S3 bucket name
+  TF_STATE_BUCKET: personio-aws-infra-statebucket  
   PLAIN_FILE_KEY: terraform/tfplan
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
   IMAGE_NAME: personio-app
-  IMAGE_TAG: ${{ github.sha }}
+  #IMAGE_TAG: ${{ github.sha }}
+  IMAGE_TAG: bce45b1f47897a8fe54292be7560c863f76c37cd
 
 jobs:
   terraform-apply:
-    if: ${{ github.event.pull_request.merged == true }}  # Only if the PR is merged
+    if: ${{ github.event.pull_request.merged == true }}  
     runs-on: ubuntu-latest
 
     steps:
@@ -53,12 +54,6 @@ jobs:
                        -backend-config="key=terraform/state/terraform.tfstate" \
                        -backend-config="region=${{ env.AWS_REGION }}"        
 
-#    - name: Download tfplan artifact from plan.yml
-#      uses: actions/download-artifact@v4
-#      with:
-#        name: tfplan  # Name of the artifact from plan.yml
-#        path: terraform  # Path where the plan artifact will be downloaded
-
     - name: Verify Artifact Exists
       run: |
         ls -l terraform
@@ -70,12 +65,12 @@ jobs:
 #       terraform apply -auto-approve tfplan
 
        
-    - name: Terraform Apply
-      run: |
-        cd terraform
-        terraform apply -auto-approve tfplan  # Apply the downloaded plan
+#    - name: Terraform Apply
+#      run: |
+#        cd terraform
+#        terraform apply -auto-approve tfplan  # Apply the downloaded plan
 
-    - name: Terraform Apply Output
-      run: terraform output  # Output any relevant results from the Terraform apply
+#    - name: Terraform Apply Output
+#      run: terraform output  # Output any relevant results from the Terraform apply
 
       
